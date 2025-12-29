@@ -19,3 +19,5 @@ cek : `flutter devices`
 jika muncul : `Android SDK built for x86 (mobile)`
 
 lalu jalankan: `flutter run` or `flutter run -d emulator-5554`
+
+atau kalau masih error klik aja icon` run and debug` di vscode
