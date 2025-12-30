@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../auth/models/user_model.dart';
+import '../../auth/services/auth_service.dart';
 
 class HomeScreen extends StatelessWidget {
   final UserModel user;
-
   const HomeScreen({super.key, required this.user});
 
   String _today() {
-    return DateFormat('EEEE, dd MMMM yyyy', 'id_ID')
-        .format(DateTime.now());
+    return DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(DateTime.now());
   }
 
   @override
@@ -23,18 +22,31 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              /// HEADER
-              Text(
-                'Welcome, ${user.name}',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                _today(),
-                style: TextStyle(color: Colors.grey[600]),
+              /// HEADER + AVATAR
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Welcome, ${user.name}',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _today(),
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+
+                  /// Avatar kanan atas
+                  _UserAvatar(user: user),
+                ],
               ),
 
               const SizedBox(height: 24),
@@ -88,7 +100,6 @@ class HomeScreen extends StatelessWidget {
                           TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 12),
-
                     _AttendanceRow(label: 'Clock In', value: '--:--'),
                     _AttendanceRow(label: 'Clock Out', value: '--:--'),
                     _AttendanceRow(label: 'Status', value: 'Belum Absen'),
@@ -166,6 +177,97 @@ class _AttendanceRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// USER AVATAR + DROPDOWN CARD
+class _UserAvatar extends StatefulWidget {
+  final UserModel user;
+  const _UserAvatar({required this.user});
+
+  @override
+  State<_UserAvatar> createState() => _UserAvatarState();
+}
+
+class _UserAvatarState extends State<_UserAvatar> {
+  OverlayEntry? _overlayEntry;
+
+  void _toggleDropdown() {
+    if (_overlayEntry == null) {
+      _overlayEntry = _createOverlayEntry();
+      final overlay = Overlay.of(context);
+      if (overlay != null) {
+        overlay.insert(_overlayEntry!);
+      }
+    } else {
+      _overlayEntry?.remove();
+      _overlayEntry = null;
+    }
+  }
+
+
+  OverlayEntry _createOverlayEntry() {
+    RenderBox renderBox = context.findRenderObject() as RenderBox;
+    var size = renderBox.size;
+    var offset = renderBox.localToGlobal(Offset.zero);
+
+    return OverlayEntry(
+      builder: (context) => Positioned(
+        top: offset.dy + size.height,
+        right: 20,
+        child: Material(
+          elevation: 8,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: 200,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.user.email,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 14)),
+                const Divider(),
+                InkWell(
+                  onTap: () {
+                    _overlayEntry?.remove();
+                    _overlayEntry = null;
+
+                    // Logout safe tanpa context
+                    AuthService.logout();
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    child:
+                        Text('Logout', style: TextStyle(color: Colors.red)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: CircleAvatar(
+        backgroundColor: Colors.blue,
+        child: Text(
+          widget.user.name.isNotEmpty
+              ? widget.user.name[0].toUpperCase()
+              : '?',
+          style: const TextStyle(color: Colors.white),
+        ),
+      ),
+      onPressed: _toggleDropdown,
     );
   }
 }

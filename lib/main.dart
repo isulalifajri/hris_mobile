@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+// 1️⃣ Tambahkan global navigator key
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Indonesian locale
   await initializeDateFormatting('id_ID', null);
 
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -20,6 +23,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'HRIS Mobile',
       theme: ThemeData(primarySwatch: Colors.blue),
+
+      // Pasang navigatorKey
+      navigatorKey: navigatorKey,
+
       home: const LoginScreen(),
     );
   }
