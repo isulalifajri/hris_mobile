@@ -131,6 +131,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _attendanceRow(String label, String? value) {
+    String displayValue;
+    if (label == 'Status') {
+      displayValue = value ?? '-';
+    } else {
+      if (value == null || value.isEmpty) {
+        displayValue = '--:--';
+      } else {
+        // ambil HH:mm saja dari HH:mm:ss
+        final parts = value.split(':');
+        displayValue = '${parts[0]}:${parts[1]}';
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -138,11 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Text(label),
           Text(
-            label == 'Status'
-                ? value ?? '-'
-                : value != null
-                    ? DateFormat('HH:mm').format(DateTime.parse(value))
-                    : '--:--',
+            displayValue,
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ],
