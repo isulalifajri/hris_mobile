@@ -21,3 +21,34 @@ jika muncul : `Android SDK built for x86 (mobile)`
 lalu jalankan: `flutter run` or `flutter run -d emulator-5554`
 
 atau kalau masih error klik aja icon` run and debug` di vscode
+
+structur folder:
+```
+lib/
+│
+├── main.dart
+│
+├── core/
+│   ├── config/
+│   │   └── api_config.dart
+│   │
+│   └── network/
+│       └── api_client.dart
+│
+├── features/
+│   ├── auth/
+│   │   ├── models/
+│   │   │   └── user_model.dart
+│   │   │
+│   │   ├── services/
+│   │   │   └── auth_service.dart
+│   │   │
+│   │   └── screens/
+│   │       └── login_screen.dart
+│   │
+│   └── home/
+│       └── screens/
+│           └── home_screen.dart
+
+
+```
