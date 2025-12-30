@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'features/auth/screens/login_screen.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Indonesian locale
+  await initializeDateFormatting('id_ID', null);
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
