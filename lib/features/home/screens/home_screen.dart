@@ -2,177 +2,147 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../auth/models/user_model.dart';
 import '../../auth/services/auth_service.dart';
+import '../models/today_attendance_model.dart';
+import '../services/attendance_service.dart';
+import '../widgets/clock_buttons.dart';
+import '../widgets/live_clock.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final UserModel user;
   const HomeScreen({super.key, required this.user});
 
-  String _today() {
-    return DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(DateTime.now());
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  TodayAttendanceModel? _attendance;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTodayAttendance();
   }
+
+  Future<void> _loadTodayAttendance() async {
+    try {
+      final result = await AttendanceService.getTodayAttendance();
+      if (mounted) setState(() => _attendance = result ?? TodayAttendanceModel());
+    } catch (e) {
+      debugPrint('Failed load attendance: $e');
+      if (mounted) setState(() => _attendance = TodayAttendanceModel());
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  String _todayDate() => DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(DateTime.now());
 
   @override
   Widget build(BuildContext context) {
+    final attendance = _attendance ?? TodayAttendanceModel();
+
     return Scaffold(
       backgroundColor: const Color(0xffF5F6FA),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              /// HEADER + AVATAR
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _loadTodayAttendance,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Welcome, ${user.name}',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      /// HEADER
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Welcome, ${widget.user.name}',
+                                style: const TextStyle(
+                                    fontSize: 22, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(_todayDate(),
+                                  style: TextStyle(color: Colors.grey[600])),
+                            ],
+                          ),
+                          /// Avatar + Dropdown Logout
+                          _UserAvatar(user: widget.user),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _today(),
-                        style: TextStyle(color: Colors.grey[600]),
+
+                      const SizedBox(height: 32),
+
+                      /// LIVE CLOCK
+                      const Center(child: LiveClock()),
+
+                      const SizedBox(height: 24),
+
+                      /// CLOCK BUTTONS & QUICK ACTION
+                      ClockButtons(
+                        attendance: attendance,
+                        onUpdated: (updated) => setState(() => _attendance = updated),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      /// TODAY ATTENDANCE CARD
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Absensi Hari Ini',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 12),
+                            _attendanceRow('Clock In', attendance.clockIn),
+                            _attendanceRow('Clock Out', attendance.clockOut),
+                            _attendanceRow(
+                              'Status',
+                              attendance.hasClockOut
+                                  ? 'Selesai'
+                                  : attendance.hasClockIn
+                                      ? 'Sedang Bekerja'
+                                      : 'Belum Absen',
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-
-                  /// Avatar kanan atas
-                  _UserAvatar(user: user),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              /// QUICK ACTION
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                children: const [
-                  _MenuCard(
-                    icon: Icons.login,
-                    label: 'Clock In',
-                    color: Colors.green,
-                  ),
-                  _MenuCard(
-                    icon: Icons.logout,
-                    label: 'Clock Out',
-                    color: Colors.red,
-                  ),
-                  _MenuCard(
-                    icon: Icons.beach_access,
-                    label: 'Ajukan Cuti',
-                    color: Colors.orange,
-                  ),
-                  _MenuCard(
-                    icon: Icons.history,
-                    label: 'Riwayat',
-                    color: Colors.blue,
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              /// TODAY ATTENDANCE
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      'Absensi Hari Ini',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 12),
-                    _AttendanceRow(label: 'Clock In', value: '--:--'),
-                    _AttendanceRow(label: 'Clock Out', value: '--:--'),
-                    _AttendanceRow(label: 'Status', value: 'Belum Absen'),
-                  ],
                 ),
               ),
-            ],
-          ),
-        ),
       ),
     );
   }
-}
 
-/// CARD MENU
-class _MenuCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  const _MenuCard({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () {},
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              backgroundColor: color.withOpacity(.15),
-              radius: 28,
-              child: Icon(icon, color: color, size: 28),
-            ),
-            const SizedBox(height: 12),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// ROW ATTENDANCE
-class _AttendanceRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _AttendanceRow({
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _attendanceRow(String label, String? value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label),
           Text(
-            value,
+            label == 'Status'
+                ? value ?? '-'
+                : value != null
+                    ? DateFormat('HH:mm').format(DateTime.parse(value))
+                    : '--:--',
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ],
@@ -181,7 +151,9 @@ class _AttendanceRow extends StatelessWidget {
   }
 }
 
-/// USER AVATAR + DROPDOWN CARD
+/// =======================================================
+/// USER AVATAR + LOGOUT DROPDOWN
+/// =======================================================
 class _UserAvatar extends StatefulWidget {
   final UserModel user;
   const _UserAvatar({required this.user});
@@ -197,20 +169,17 @@ class _UserAvatarState extends State<_UserAvatar> {
     if (_overlayEntry == null) {
       _overlayEntry = _createOverlayEntry();
       final overlay = Overlay.of(context);
-      if (overlay != null) {
-        overlay.insert(_overlayEntry!);
-      }
+      if (overlay != null) overlay.insert(_overlayEntry!);
     } else {
       _overlayEntry?.remove();
       _overlayEntry = null;
     }
   }
 
-
   OverlayEntry _createOverlayEntry() {
-    RenderBox renderBox = context.findRenderObject() as RenderBox;
-    var size = renderBox.size;
-    var offset = renderBox.localToGlobal(Offset.zero);
+    final renderBox = context.findRenderObject() as RenderBox;
+    final size = renderBox.size;
+    final offset = renderBox.localToGlobal(Offset.zero);
 
     return OverlayEntry(
       builder: (context) => Positioned(
@@ -237,14 +206,11 @@ class _UserAvatarState extends State<_UserAvatar> {
                   onTap: () {
                     _overlayEntry?.remove();
                     _overlayEntry = null;
-
-                    // Logout safe tanpa context
-                    AuthService.logout();
+                    AuthService.logout(); // Logout aman tanpa Navigator langsung
                   },
                   child: const Padding(
                     padding: EdgeInsets.symmetric(vertical: 8.0),
-                    child:
-                        Text('Logout', style: TextStyle(color: Colors.red)),
+                    child: Text('Logout', style: TextStyle(color: Colors.red)),
                   ),
                 ),
               ],

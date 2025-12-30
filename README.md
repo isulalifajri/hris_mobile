@@ -32,8 +32,11 @@ lib/
 │   ├── config/
 │   │   └── api_config.dart
 │   │
-│   └── network/
-│       └── api_client.dart
+│   ├── network/
+│   │   └── api_client.dart
+│   │
+│   └── storage/
+│       └── token_storage.dart
 │
 ├── features/
 │   ├── auth/
@@ -47,8 +50,17 @@ lib/
 │   │       └── login_screen.dart
 │   │
 │   └── home/
+│       ├── models/
+│       │   └── today_attendance_model.dart     
+│       │
+│       ├── services/
+│       │   └── attendance_service.dart         
+│       │
+│       ├── widgets/
+│       │   ├── clock_buttons.dart              
+│       │   └── live_clock.dart                 
+│       │
 │       └── screens/
-│           └── home_screen.dart
-
+│           └── home_screen.dart                
 
 ```

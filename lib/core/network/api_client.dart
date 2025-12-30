@@ -11,6 +11,26 @@ class ApiClient {
     };
   }
 
+  /// =======================
+  /// GET (BARU)
+  /// =======================
+  static Future<http.Response> get(
+    String endpoint, {
+    String? token,
+  }) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/$endpoint');
+
+    return await http
+        .get(
+          url,
+          headers: _headers(token: token),
+        )
+        .timeout(ApiConfig.timeout);
+  }
+
+  /// =======================
+  /// POST (SUDAH ADA)
+  /// =======================
   static Future<http.Response> post(
     String endpoint, {
     Map<String, dynamic>? body,
@@ -18,7 +38,7 @@ class ApiClient {
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/$endpoint');
 
-    return http
+    return await http
         .post(
           url,
           headers: _headers(token: token),
