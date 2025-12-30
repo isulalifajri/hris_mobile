@@ -19,12 +19,13 @@ class ClockButtons extends StatefulWidget {
 class _ClockButtonsState extends State<ClockButtons> {
   bool _loading = false;
 
+  /// Clock In
   Future<void> _clockIn() async {
     setState(() => _loading = true);
-
     try {
-      final result = await AttendanceService.clockIn();
-      widget.onUpdated(result);
+      await AttendanceService.clockIn(); // POST clock in
+      final updated = await AttendanceService.getTodayAttendance(); // GET latest attendance
+      widget.onUpdated(updated); // update UI
     } catch (e) {
       _showError(e.toString());
     } finally {
@@ -32,12 +33,13 @@ class _ClockButtonsState extends State<ClockButtons> {
     }
   }
 
+  /// Clock Out
   Future<void> _clockOut() async {
     setState(() => _loading = true);
-
     try {
-      final result = await AttendanceService.clockOut();
-      widget.onUpdated(result);
+      await AttendanceService.clockOut(); // POST clock out
+      final updated = await AttendanceService.getTodayAttendance(); // GET latest attendance
+      widget.onUpdated(updated); // update UI
     } catch (e) {
       _showError(e.toString());
     } finally {
@@ -45,6 +47,7 @@ class _ClockButtonsState extends State<ClockButtons> {
     }
   }
 
+  /// Show error
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -56,12 +59,15 @@ class _ClockButtonsState extends State<ClockButtons> {
     final hasClockIn = widget.attendance.hasClockIn;
     final hasClockOut = widget.attendance.hasClockOut;
 
+    // Tombol Clock In dan Clock Out sesuai logika
+    final clockInEnabled = !_loading && !hasClockIn && !hasClockOut;
+    final clockOutEnabled = !_loading && hasClockIn && !hasClockOut;
+
     return Row(
       children: [
         Expanded(
           child: ElevatedButton(
-            onPressed:
-                (!_loading && !hasClockIn) ? _clockIn : null,
+            onPressed: clockInEnabled ? _clockIn : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
             ),
@@ -71,10 +77,7 @@ class _ClockButtonsState extends State<ClockButtons> {
         const SizedBox(width: 12),
         Expanded(
           child: ElevatedButton(
-            onPressed:
-                (!_loading && hasClockIn && !hasClockOut)
-                    ? _clockOut
-                    : null,
+            onPressed: clockOutEnabled ? _clockOut : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
             ),
