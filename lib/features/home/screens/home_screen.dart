@@ -37,7 +37,20 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  String _todayDate() => DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(DateTime.now());
+  String _greeting() {
+    final hour = DateTime.now().hour;
+
+    if (hour < 11) {
+      return 'Selamat Pagi';
+    } else if (hour < 15) {
+      return 'Selamat Siang';
+    } else if (hour < 18) {
+      return 'Selamat Sore';
+    } else {
+      return 'Selamat Malam';
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     fontSize: 22, fontWeight: FontWeight.bold),
                               ),
                               const SizedBox(height: 4),
-                              Text(_todayDate(),
+                              Text(_greeting(),
                                   style: TextStyle(color: Colors.grey[600])),
                             ],
                           ),
